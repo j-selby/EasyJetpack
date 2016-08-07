@@ -1,8 +1,8 @@
-name: EasyJetpack
-main: net.jselby.ej.EasyJetpack
-version: 1.3
-author: j_selby
-softdepend: [AntiCheat]
+name: InfinityJetpacks
+main: me.paulvogel.easyjetpack.EasyJetpack
+version: 1.7.0 Beta 1
+authors: [j_selby, Paul Vogel, DarknesGaming]
+softdepend: [AntiCheatReloaded]
 permissions:
    easyjetpack.jetpackname:
       description: Allows a player to use a jetpack
@@ -13,6 +13,21 @@ permissions:
    easyjetpack.nofall:
       description: Disables all fall damage, while wearing a jetpack
       default: op
+   easyjetpack.infinity:
+      description: Operation of the Infinity Jetpack
+      default: true
+   easyjetpack.secretitem1:
+      description: Secret Diamond Block recipe from Infinity Laboratories
+      default: true
+   easyjetpack.lavabucket:
+      description: Craftable Lava Bucket from Infinity Laboratories
+      default: true
+   easyjetpack.secretitem2:
+      description: Secret Emerald recipe from Infinity Laboratories
+      default: true
+   easyjetpack.secretitem3:
+      description: Secret Nether Star recipe from Infinity Laboratories
+      default: true
 commands:
    ej:
       description: Various EasyJetpack admin commmands

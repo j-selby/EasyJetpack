@@ -1,16 +1,14 @@
-# EasyJetpack configuration file
-# Version v1.2
-# View http://dev.bukkit.org/bukkit-plugins/easyjetpack/ for more information
+# InfinityJetpack configuration file
+# Version v1.7.0 Beta 1
+# Based on EasyJetpack by j_selby
 
-# Jetpacks are all built-in Jetpacks
+# These Jetpacks were created by j_selby.
 jetpacks:
     # Traditional, or 'puff' Jetpack
     traditional:
         # Is this Jetpack enabled?
         enabled: true
         # The name of the Material used.
-        # These names can be found at
-        # http://jd.bukkit.org/rb/apidocs/org/bukkit/Material.html
         material: GOLD_CHESTPLATE
         # Is durability enabled on this Jetpack?
         durability: true
@@ -22,8 +20,6 @@ jetpacks:
         # Is this Jetpack enabled?
         enabled: true
         # The name of the Material used.
-        # These names can be found at
-        # http://jd.bukkit.org/rb/apidocs/org/bukkit/Material.html
         material: GOLD_CHESTPLATE
         # Is durability enabled on this Jetpack?
         durability: true
@@ -35,8 +31,6 @@ jetpacks:
         # Is this Jetpack enabled?
         enabled: true
         # The name of the Material used.
-        # These names can be found at
-        # http://jd.bukkit.org/rb/apidocs/org/bukkit/Material.html
         material: CHAINMAIL_CHESTPLATE
         # Is durability enabled on this Jetpack?
         durability: true
@@ -44,12 +38,10 @@ jetpacks:
         craftable: true
         # Is the Jetpack repairable?
         antianvil: true
-    hover:
+    rocket:
         # Is this Jetpack enabled?
         enabled: true
         # The name of the Material used.
-        # These names can be found at
-        # http://jd.bukkit.org/rb/apidocs/org/bukkit/Material.html
         material: CHAINMAIL_CHESTPLATE
         # Is the Jetpack craftable?
         craftable: true
@@ -59,8 +51,6 @@ jetpacks:
         # Are these fallboots enabled?
         enabled: true
         # The name of the Material used.
-        # These names can be found at
-        # http://jd.bukkit.org/rb/apidocs/org/bukkit/Material.html
         material: LEATHER_BOOTS
         # Is durability enabled on these boots?
         durability: true
@@ -70,12 +60,85 @@ jetpacks:
         jetpackrequired: false
         # Is the Jetpack repairable?
         antianvil: true
+# Infinity Laboratories Jetpacks
+# These jetpacks have been created by Infinity Laboratories, and
+# are distributed by other companies.
+    entry:
+        # Is this jetpack enabled?
+        enabled: true
+        # The name of the material used.
+        material: LEATHER_CHESTPLATE
+        # Is the jetpack craftable?
+        craftable: true
+        # Is the jetpack repairable?
+        antianvil: true
+    infinity:
+        # Is this jetpack enabled?
+        enabled: true
+        # The name of the material used.
+        material: DIAMOND_CHESTPLATE
+        # Is the jetpack craftable?
+        craftable: true
+        # Is the jetpack repairable?
+        antianvil: true
+    infinityrocket:
+        # Is this jetpack enabled?
+        enabled: true
+        # The name of the material used.
+        material: DIAMOND_CHESTPLATE
+        # Is the jetpack craftable?
+        craftable: true
+        # Is this jetpack repairable?
+        antianvil: true
+    slimepack:
+        # Is this jetpack enabled?
+        enabled: true
+        # The name of the material used.
+        material: LEATHER_CHESTPLATE
+        # Is the jetpack craftable?
+        craftable: true
+    rocketboots:
+        # Is this jetpack enabled?
+        enabled: true
+        # The name of the material used.
+        material: LEATHER_BOOTS
+        # Is the jetpack craftable?
+        craftable: true
+# Infinity Laboratories Secret Items
+# These secret items can only be created by learning the crafting
+# recipe, which is kept secret by Infinity Laboratories.
+    secretitem1:
+        # Is this item enabled?
+        enabled: true
+        # The name of the material used.
+        material: DIAMOND_BLOCK
+        # Is this item craftable?
+        craftable: true
+    lavabucket:
+        # Is this item enabled?
+        enabled: true
+        # The name of the material used.
+        material: LAVA_BUCKET
+        # Is this item craftable?
+        craftable: true
+    secretitem2:
+        # Is this item enabled?
+        enabled: true
+        # The name of the material used.
+        material: EMERALD
+        # Is this item craftable?
+        craftable: true
+    secretitem3:
+        # Is this item enabled?
+        enabled: true
+        # The name of the material used.
+        material: NETHER_STAR
+        # Is this item craftable?
+        craftable: true
 fuel:
     # Is fuel usage enabled?
     enabled: true
     # The name of the Material used.
-    # These names can be found at
-    # http://jd.bukkit.org/rb/apidocs/org/bukkit/Material.html
     material: COAL
     # Durability of the Material (-1 for any), for example:
     # to match coal and charcoal, use -1. To match coal only, 0, and
