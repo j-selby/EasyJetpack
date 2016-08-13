@@ -95,7 +95,7 @@ public class Jetpack {
         }
 
         itemType = JetpackTypes.valueOf(section.getString("type", "armor").toUpperCase());
-        actionType = ActionTypes.valueOf(section.getString("actionType", "BOOST"));
+        actionType = ActionTypes.valueOf(section.getString("actionType", "NONE"));
 
         if (itemType == JetpackTypes.ARMOR) {
             String slotName = section.getString("slot", "chestplate").toUpperCase();
