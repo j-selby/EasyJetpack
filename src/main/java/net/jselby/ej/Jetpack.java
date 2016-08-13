@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
  * A Jetpack is a singleton used to represent a modified item in the world.
  */
 public class Jetpack {
-    private static Pattern colorFilter = Pattern.compile("\\$(?<color>([A-Za-z_]*))\\$");
+    private final static Pattern colorFilter = Pattern.compile("\\$(?<color>([A-Za-z_]*))\\$");
 
     private final HashMap<UUID, Integer> burstTimers = new HashMap<>();
 
