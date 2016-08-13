@@ -60,6 +60,7 @@ public class Jetpack {
             throw new IllegalArgumentException("No in-game item name specified for item " + giveName);
         }
 
+        // Read in-game name
         String rawName = ChatColor.RESET + section.getString("itemName");
         Matcher nameMatcher;
         while((nameMatcher = colorFilter.matcher(rawName)).find()) {
@@ -67,6 +68,7 @@ public class Jetpack {
         }
         name = rawName;
 
+        // Read in-game description
         // List has multiple entries, and can return null
         String rawDescription = section.getString("description", "");
         while((nameMatcher = colorFilter.matcher(rawDescription)).find()) {
@@ -78,6 +80,11 @@ public class Jetpack {
             description.replaceAll(s -> ChatColor.RESET + s);
         } else {
             description = null;
+        }
+
+        // Read material type
+        if (!section.contains("material")) {
+            throw new IllegalArgumentException("No material specified for item " + giveName);
         }
 
         material = Material.valueOf(section.getString("material").toUpperCase().replace(" ", "_"));
