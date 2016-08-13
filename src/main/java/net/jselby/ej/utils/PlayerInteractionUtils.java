@@ -14,6 +14,8 @@ import java.util.List;
 
 /**
  * Several utilities to help with Jetpacks and players.
+ *
+ * TODO: Clean up and debuggify fuel methods.
  */
 public class PlayerInteractionUtils {
     private PlayerInteractionUtils() {}

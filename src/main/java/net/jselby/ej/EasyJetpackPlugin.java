@@ -33,9 +33,17 @@ public class EasyJetpackPlugin extends JavaPlugin {
         }
 
         // Save the default configuration files
-        saveDefaultConfig();
         if (!new File(getDataFolder(), "jetpacks.yml").exists()) {
             saveResource("jetpacks.yml", false);
+            if (new File(getDataFolder(), "config.yml").exists()) {
+                getLogger().info("Hi! Thanks for upgrading to EasyJetpack " + getDescription().getVersion() + "!");
+                getLogger().info("EasyJetpack's configuration has been moved into a file named 'jetpacks.yml' in");
+                getLogger().info("the plugin directory. Check your configurations, as modifications will not have");
+                getLogger().info("been transferred.");
+            } else {
+                getLogger().info("This is my first start. I have copied a configuration file named 'jetpacks.yml'");
+                getLogger().info("into the plugin directory. Check this file to make sure it is correct.");
+            }
         }
 
         manager = new JetpackManager(this);
@@ -51,8 +59,6 @@ public class EasyJetpackPlugin extends JavaPlugin {
 
     @Override
     public void reloadConfig() {
-        super.reloadConfig();
-
         // Parse our jetpack configuration
         File jetpackConfig = new File(getDataFolder(), "jetpacks.yml");
         YamlConfiguration config = YamlConfiguration.loadConfiguration(jetpackConfig);
