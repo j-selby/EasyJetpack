@@ -37,8 +37,6 @@ public class Jetpack {
     private final List<String> description;
     private final Material material;
 
-    private final CraftingRecipe recipe;
-
     private final JetpackTypes itemType;
     private final ActionTypes actionType;
     private final int slot;
@@ -80,7 +78,7 @@ public class Jetpack {
         String rawRecipe = section.getString("recipe", "").trim();
         if (rawRecipe.length() != 0) {
             String[] recipeArgs = rawRecipe.replaceAll("  ", " ").split(" ");
-            recipe = new CraftingRecipe(getItem());
+            CraftingRecipe recipe = new CraftingRecipe(getItem());
             for (int i = 0; i < recipeArgs.length; i++) {
                 String recipeArg = recipeArgs[i];
                 if (!recipeArg.equalsIgnoreCase("empty")) {
@@ -90,8 +88,6 @@ public class Jetpack {
 
             // TODO: Craft multiples?
             recipe.register();
-        } else {
-            recipe = null;
         }
 
         itemType = JetpackTypes.valueOf(section.getString("type", "armor").toUpperCase());
@@ -232,31 +228,28 @@ public class Jetpack {
                 VisualCandyUtils.jetpackEffect(event.getPlayer());
             }
         } else if (actionType == ActionTypes.BURST && event.isSneaking()) {
-            int id = Bukkit.getScheduler().scheduleSyncRepeatingTask(JetpackManager.getInstance().getPlugin(), new Runnable() {
-                @Override
-                public void run() {
-                    if (!event.getPlayer().isOnline()
-                            || !checkFuel(event.getPlayer())) {
-                        Bukkit.getScheduler().cancelTask(burstTimers.remove(event.getPlayer().getUniqueId()));
-                        return;
-                    }
-
-                    Vector dir = event.getPlayer().getLocation().getDirection();
-                    double y = event.getPlayer().getVelocity().getY();
-                    if (y < 0.3D) {
-                        y = 0.3D;
-                    }
-                    y *= 1.3D;
-                    if (y > 10) {
-                        y = 10;
-                    }
-                    event.getPlayer().setVelocity(
-                            PlayerInteractionUtils.addVector(event.getPlayer(), new Vector(
-                                            dir.getX() * 0.5D, y, dir.getZ() * 0.5D), velocity[0], velocity[1],
-                                    velocity[2]));
-
-                    VisualCandyUtils.jetpackEffect(event.getPlayer());
+            int id = Bukkit.getScheduler().scheduleSyncRepeatingTask(JetpackManager.getInstance().getPlugin(), () -> {
+                if (!event.getPlayer().isOnline()
+                        || !checkFuel(event.getPlayer())) {
+                    Bukkit.getScheduler().cancelTask(burstTimers.remove(event.getPlayer().getUniqueId()));
+                    return;
                 }
+
+                Vector dir = event.getPlayer().getLocation().getDirection();
+                double y = event.getPlayer().getVelocity().getY();
+                if (y < 0.3D) {
+                    y = 0.3D;
+                }
+                y *= 1.3D;
+                if (y > 10) {
+                    y = 10;
+                }
+                event.getPlayer().setVelocity(
+                        PlayerInteractionUtils.addVector(event.getPlayer(), new Vector(
+                                        dir.getX() * 0.5D, y, dir.getZ() * 0.5D), velocity[0], velocity[1],
+                                velocity[2]));
+
+                VisualCandyUtils.jetpackEffect(event.getPlayer());
             }, 1L, 1L);
             burstTimers.put(event.getPlayer().getUniqueId(), id);
         } else if (actionType == ActionTypes.BURST && !event.isSneaking()) {
@@ -348,6 +341,7 @@ public class Jetpack {
     private boolean checkFuel(Player player) {
         // Check if fuel is enabled
         if (fuelTypes.length != 0) {
+            // Check each fuel type, and if it works, return true
             for (Material fuelType : fuelTypes) {
                 // TODO: Fuel with durability value
                 // TODO: better params
@@ -355,6 +349,8 @@ public class Jetpack {
                     return true;
                 }
             }
+
+            // Welp.
             player.sendMessage(ChatColor.RED + "You have no fuel!");
             return false;
         } else {

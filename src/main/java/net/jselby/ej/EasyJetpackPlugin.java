@@ -32,9 +32,9 @@ public class EasyJetpackPlugin extends JavaPlugin {
             getLogger().warning("server.properties configuration file!");
             getLogger().warning("This will mean that players will be kicked");
             getLogger().warning(
-                    "when using Jetpacks for a extended time period");
+                    "when using Jetpacks for a extended time period.");
             getLogger().warning(
-                    "Consider enabling allow-flight to prevent this");
+                    "Consider enabling allow-flight to prevent this.");
             getLogger().warning("==========");
         }
 
@@ -42,13 +42,17 @@ public class EasyJetpackPlugin extends JavaPlugin {
         if (!new File(getDataFolder(), "jetpacks.yml").exists()) {
             saveResource("jetpacks.yml", false);
             if (new File(getDataFolder(), "config.yml").exists()) {
-                getLogger().info("Hi! Thanks for upgrading to EasyJetpack " + getDescription().getVersion() + "!");
-                getLogger().info("EasyJetpack's configuration has been moved into a file named 'jetpacks.yml' in");
-                getLogger().info("the plugin directory. Check your configurations, as modifications will not have");
-                getLogger().info("been transferred.");
+                getLogger().info("Hi! Thanks for upgrading to EasyJetpack "
+                        + getDescription().getVersion() + "!");
+                getLogger().info("EasyJetpack's configuration has been moved");
+                getLogger().info("into a file named 'jetpacks.yml' in the plugin");
+                getLogger().info("directory. Check your configurations, as");
+                getLogger().info("modifications will not have been transferred.");
             } else {
-                getLogger().info("This is my first start. I have copied a configuration file named 'jetpacks.yml'");
-                getLogger().info("into the plugin directory. Check this file to make sure it is correct.");
+                getLogger().info("This is my first start. I have copied a");
+                getLogger().info("configuration file named 'jetpacks.yml'");
+                getLogger().info("into the plugin directory. Check this file");
+                getLogger().info("to make sure it is correct.");
             }
         }
 
