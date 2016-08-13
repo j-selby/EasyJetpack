@@ -14,8 +14,6 @@ import java.util.List;
 
 /**
  * Several utilities to help with Jetpacks and players.
- *
- * TODO: Clean up and debuggify fuel methods.
  */
 public class PlayerInteractionUtils {
     private PlayerInteractionUtils() {}
@@ -114,6 +112,8 @@ public class PlayerInteractionUtils {
     public static boolean useFuel(Player player, Material fuel, int durability,
                                   boolean mustBeHolding,
                                   double factor) {
+        // TODO: Fix multiple stacks being combined together (lossy)
+
         PlayerInventory inventory = player.getInventory();
 
         boolean isBurning = false;
@@ -281,6 +281,7 @@ public class PlayerInteractionUtils {
      */
     public static void shuffleCoal(Player player, Material fuelMaterial,
                                    int durability, boolean mustBeHolding, boolean isOffhand) {
+        // TODO: Fix weird stack shuffling
         // First, make sure they are holding fuel.
         if (player.getInventory().contains(fuelMaterial)) {
             int position = -1;

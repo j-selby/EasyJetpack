@@ -44,6 +44,7 @@ public class Jetpack {
 
     private final boolean jetpackEffect;
     private final boolean repairable;
+    private final int durability;
 
     private final Material[] fuelTypes;
 
@@ -93,15 +94,16 @@ public class Jetpack {
         String rawRecipe = section.getString("recipe", "").trim();
         if (rawRecipe.length() != 0) {
             String[] recipeArgs = rawRecipe.replaceAll("  ", " ").split(" ");
-            CraftingRecipe recipe = new CraftingRecipe(getItem());
+            ItemStack item = getItem();
+            item.setAmount(section.getInt("recipeAmount", 1));
+
+            CraftingRecipe recipe = new CraftingRecipe(item);
             for (int i = 0; i < recipeArgs.length; i++) {
                 String recipeArg = recipeArgs[i];
                 if (!recipeArg.equalsIgnoreCase("empty")) {
                     recipe.setSlot(i, Material.getMaterial(recipeArg.toUpperCase()));
                 }
             }
-
-            // TODO: Craft multiples?
             recipe.register();
         }
 
@@ -144,6 +146,7 @@ public class Jetpack {
 
         repairable = section.getBoolean("repairable", false);
         jetpackEffect = section.getBoolean("useJetpackEffect", false);
+        durability = section.getInt("uses", -1);
 
         // Parse velocity
         String[] velocityString = section.getString("velocity", "0.45 0.6 0.45")
@@ -203,7 +206,12 @@ public class Jetpack {
                     inventory.getItem(inventory.getSize() - (2 + slot)))) {
                 return inventory.getSize() - (2 + slot);
         } else if (itemType == JetpackTypes.TOOL) {
-            // TODO: Tools
+            for (int i = 0; i < player.getInventory().getSize(); i++) {
+                if (isItemThisJetpack(
+                        inventory.getItem(i))) {
+                    return i;
+                }
+            }
         }
         return -1;
     }
@@ -228,8 +236,6 @@ public class Jetpack {
             return;
         }
 
-        // TODO: Handle item damaging
-
         if (actionType == ActionTypes.BOOST && event.isSneaking()) {
             if (!checkFuel(event.getPlayer())) {
                 return;
@@ -244,10 +250,15 @@ public class Jetpack {
             if (jetpackEffect) {
                 VisualCandyUtils.jetpackEffect(event.getPlayer());
             }
+
+            damageItem(event.getPlayer());
         } else if (actionType == ActionTypes.BURST && event.isSneaking()) {
+            // Create a iteration counter to ensure this doesn't get destroyed every so often
+            final int[] counter = new int[]{0};
+
             int id = Bukkit.getScheduler().scheduleSyncRepeatingTask(JetpackManager.getInstance().getPlugin(), () -> {
                 if (!event.getPlayer().isOnline()
-                        || !checkFuel(event.getPlayer())) {
+                        || (counter[0] % 20 == 0 && !checkFuel(event.getPlayer()))) {
                     Bukkit.getScheduler().cancelTask(burstTimers.remove(event.getPlayer().getUniqueId()));
                     return;
                 }
@@ -267,6 +278,14 @@ public class Jetpack {
                                 velocity[2]));
 
                 VisualCandyUtils.jetpackEffect(event.getPlayer());
+
+                if (counter[0] % 20 == 0) {
+                    if (damageItem(event.getPlayer())) {
+                        Bukkit.getScheduler().cancelTask(burstTimers.remove(event.getPlayer().getUniqueId()));
+                    }
+                }
+
+                counter[0]++;
             }, 1L, 1L);
             burstTimers.put(event.getPlayer().getUniqueId(), id);
         } else if (actionType == ActionTypes.BURST && !event.isSneaking()) {
@@ -288,6 +307,8 @@ public class Jetpack {
                 loc.setPitch(event.getPlayer().getLocation().getPitch());
                 event.getPlayer().teleport(loc);
                 event.getPlayer().setVelocity(oldVelocity);
+
+                damageItem(event.getPlayer());
             }
         }
     }
@@ -298,18 +319,22 @@ public class Jetpack {
      * @param event The event to handle. Must be for a Player.
      */
     void onDamage(EntityDamageEvent event) {
-        // TODO: Handle item damaging
+        if (event.getCause() == EntityDamageEvent.DamageCause.FALL) {
 
-        if (event.getCause() == EntityDamageEvent.DamageCause.FALL
-                && (actionType == ActionTypes.NO_FALL_DAMAGE
-                || event.getEntity().hasPermission("easyjetpack.nofall"))) {
-            if (!hasPermission((Player) event.getEntity())) {
-                return;
+            if (actionType == ActionTypes.NO_FALL_DAMAGE) {
+                if (!hasPermission((Player) event.getEntity())) {
+                    return;
+                }
+
+                if (!checkFuel((Player) event.getEntity())) {
+                    return;
+                }
+
+                damageItem((Player) event.getEntity());
+                event.setCancelled(true);
+            } else if (event.getEntity().hasPermission("easyjetpack.nofall")) {
+                event.setCancelled(true);
             }
-            if (!checkFuel((Player) event.getEntity())) {
-                return;
-            }
-            event.setCancelled(true);
         }
     }
 
@@ -361,7 +386,6 @@ public class Jetpack {
             // Check each fuel type, and if it works, return true
             for (Material fuelType : fuelTypes) {
                 // TODO: Fuel with durability value
-                // TODO: better params
                 if (PlayerInteractionUtils.useFuel(player, fuelType, 0, true, 1f)) {
                     return true;
                 }
@@ -372,6 +396,41 @@ public class Jetpack {
             return false;
         } else {
             return true;
+        }
+    }
+
+    /**
+     * Damages this jetpack within a player's inventory.
+     *
+     * @param player The player who has the jetpack to damage.
+     * @return If the jetpack has been destroyed as a result of this operation.
+     */
+    private boolean damageItem(Player player) {
+        if (durability == -1 || player.hasPermission("easyjetpack.unbreakable")) {
+            return false;
+        }
+
+        // Firstly, we need to find this Jetpack item.
+        int slot = searchInventory(player);
+
+        if (slot == -1) {
+            // Um, sure?
+            JetpackManager.getInstance().getPlugin()
+                    .getLogger().warning("Attempted to damage item when it wasn't in a players inventory");
+            return false;
+        }
+
+        ItemStack jetpack = player.getInventory().getItem(slot);
+        jetpack.setDurability((short) (jetpack.getDurability() + 1));
+
+        if (jetpack.getDurability() > durability) {
+            player.sendMessage(ChatColor.RED + "Your " + ChatColor.RESET
+                    + getName() + ChatColor.RESET + "" + ChatColor.RED + " has broken!");
+            player.getInventory().setItem(slot, new ItemStack(Material.AIR, 1));
+            return true;
+        } else {
+            player.getInventory().setItem(slot, jetpack);
+            return false;
         }
     }
 }

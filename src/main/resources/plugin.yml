@@ -17,10 +17,12 @@ permissions:
       description: Allows a player to use all jetpacks
       default: true
    easyjetpack.<jetpackname>:
-      description: Allows a player to use a jetpack
+      description: Allows a player to use a specific jetpack
    easyjetpack.admin:
       description: Allows access to /ej
       default: op
    easyjetpack.nofall:
       description: Disables all fall damage while wearing a jetpack
+   easyjetpack.unbreakable:
+      description: Jetpacks won't break for this user
       default: op
