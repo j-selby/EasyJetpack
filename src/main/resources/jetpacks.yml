@@ -1,3 +1,5 @@
+### EasyJetpack configuration file
+### Version 2.0.0
 traditional:
   itemName: $blue$Jetpack
   description: |
