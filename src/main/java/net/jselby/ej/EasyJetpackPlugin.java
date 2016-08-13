@@ -110,16 +110,33 @@ public class EasyJetpackPlugin extends JavaPlugin {
                 sender.sendMessage(CHAT_PREFIX + " - (" + jetpack.getGiveName() + ") " + jetpack.getName());
             }
         } else if (args[0].equalsIgnoreCase("give")) {
-            // TODO: Named give
-            if (sender instanceof Player) {
-                Jetpack jetpack = manager.getJetpack(args[1]);
-                if (jetpack != null) {
-                    ((Player) sender).getInventory().addItem(jetpack.getItem());
+            if (args.length == 3) {
+                // Named give
+                Jetpack jetpack = manager.getJetpack(args[2]);
+                Player player = Bukkit.getPlayer(args[1]);
+                if (jetpack != null && player != null) {
+                    player.getInventory().addItem(jetpack.getItem());
+                    sender.sendMessage(CHAT_PREFIX + "Given " + jetpack.getName());
+                } else if (player == null) {
+                    sender.sendMessage(CHAT_PREFIX + ChatColor.RED + "Player not found.");
                 } else {
                     sender.sendMessage(CHAT_PREFIX + ChatColor.RED + "Jetpack not found.");
                 }
+            } else if (args.length == 2) {
+                if (sender instanceof Player) {
+                    // Self give
+                    Jetpack jetpack = manager.getJetpack(args[1]);
+                    if (jetpack != null) {
+                        ((Player) sender).getInventory().addItem(jetpack.getItem());
+                        sender.sendMessage(CHAT_PREFIX + "Given " + jetpack.getName());
+                    } else {
+                        sender.sendMessage(CHAT_PREFIX + ChatColor.RED + "Jetpack not found.");
+                    }
+                } else {
+                    sender.sendMessage(CHAT_PREFIX + ChatColor.RED + "You must be a player to run this command.");
+                }
             } else {
-                sender.sendMessage(CHAT_PREFIX + ChatColor.RED + "You must be a player to run this command.");
+                sender.sendMessage(CHAT_PREFIX + ChatColor.RED + "Unknown syntax.");
             }
         } else {
             // We couldn't find what they were looking for.

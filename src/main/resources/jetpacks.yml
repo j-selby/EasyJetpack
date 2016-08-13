@@ -46,7 +46,7 @@ burst:
   fuelUseSpeed: 0.25 # per item
 
   actionType: BURST
-  velocity: 0.45 0.6 0.45
+  velocity: 0.7 0.6 0.7
 
   useJetpackEffect: true
 

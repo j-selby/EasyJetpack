@@ -42,6 +42,7 @@ public class Jetpack {
     private final JetpackTypes itemType;
     private final ActionTypes actionType;
     private final int slot;
+    private final float[] velocity;
 
     private final boolean jetpackEffect;
     private final boolean repairable;
@@ -132,6 +133,14 @@ public class Jetpack {
 
         repairable = section.getBoolean("repairable", false);
         jetpackEffect = section.getBoolean("useJetpackEffect", false);
+
+        // Parse velocity
+        String[] velocityString = section.getString("velocity", "0.45 0.6 0.45")
+                .trim().split(" ");
+        velocity = new float[3];
+        for (int i = 0; i < velocity.length; i++) {
+            velocity[i] = Float.parseFloat(velocityString[i]);
+        }
     }
 
     /**
@@ -202,16 +211,22 @@ public class Jetpack {
      * @param event The event to handle.
      */
     void onCrouch(PlayerToggleSneakEvent event) {
+        if (!hasPermission(event.getPlayer())) {
+            return;
+        }
+
+        // TODO: Handle item damaging
+
         if (actionType == ActionTypes.BOOST && event.isSneaking()) {
             if (!checkFuel(event.getPlayer())) {
                 return;
             }
 
-            // TODO: Custom velocity
             Vector dir = event.getPlayer().getLocation().getDirection();
             event.getPlayer().setVelocity(
                     PlayerInteractionUtils.addVector(event.getPlayer(), new Vector(
-                            dir.getX() * 0.8D, 0.8D, dir.getZ() * 0.8D), 0.45, 0.6, 0.45));
+                            dir.getX() * 0.8D, 0.8D, dir.getZ() * 0.8D),
+                            velocity[0], velocity[1], velocity[2]));
 
             if (jetpackEffect) {
                 VisualCandyUtils.jetpackEffect(event.getPlayer());
@@ -237,8 +252,8 @@ public class Jetpack {
                     }
                     event.getPlayer().setVelocity(
                             PlayerInteractionUtils.addVector(event.getPlayer(), new Vector(
-                                            dir.getX() * 0.5D, y, dir.getZ() * 0.5D), 0.7, 0.6,
-                                    0.7));
+                                            dir.getX() * 0.5D, y, dir.getZ() * 0.5D), velocity[0], velocity[1],
+                                    velocity[2]));
 
                     VisualCandyUtils.jetpackEffect(event.getPlayer());
                 }
@@ -273,8 +288,14 @@ public class Jetpack {
      * @param event The event to handle. Must be for a Player.
      */
     void onDamage(EntityDamageEvent event) {
+        // TODO: Handle item damaging
+
         if (event.getCause() == EntityDamageEvent.DamageCause.FALL
-                && actionType == ActionTypes.NO_FALL_DAMAGE) {
+                && (actionType == ActionTypes.NO_FALL_DAMAGE
+                || event.getEntity().hasPermission("easyjetpack.nofall"))) {
+            if (!hasPermission((Player) event.getEntity())) {
+                return;
+            }
             if (!checkFuel((Player) event.getEntity())) {
                 return;
             }
@@ -308,6 +329,17 @@ public class Jetpack {
     }
 
     /**
+     * If the player has permissions to use this Jetpack.
+     *
+     * @param player The player to check.
+     * @return If the player has perms.
+     */
+    public boolean hasPermission(Player player) {
+        return player.hasPermission("easyjetpack.useAllJetpacks")
+                || player.hasPermission("easyjetpack." + getGiveName());
+    }
+
+    /**
      * Checks the fuel of this Jetpack.
      *
      * @param player The player to check.
@@ -317,6 +349,7 @@ public class Jetpack {
         // Check if fuel is enabled
         if (fuelTypes.length != 0) {
             for (Material fuelType : fuelTypes) {
+                // TODO: Fuel with durability value
                 // TODO: better params
                 if (PlayerInteractionUtils.useFuel(player, fuelType, 0, true, 1f)) {
                     return true;

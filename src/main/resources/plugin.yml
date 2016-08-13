@@ -10,14 +10,17 @@ commands:
    ej:
       description: Various EasyJetpack admin commmands
       usage: /ej
+      permission: easyjetpack.admin
 
 permissions:
-   easyjetpack.jetpackname:
+   easyjetpack.useAllJetpacks:
+      description: Allows a player to use all jetpacks
+      default: true
+   easyjetpack.<jetpackname>:
       description: Allows a player to use a jetpack
-      default: op
    easyjetpack.admin:
       description: Allows access to /ej
       default: op
    easyjetpack.nofall:
-      description: Disables all fall damage, while wearing a jetpack
+      description: Disables all fall damage while wearing a jetpack
       default: op
