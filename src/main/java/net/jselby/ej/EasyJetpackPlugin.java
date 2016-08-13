@@ -88,6 +88,7 @@ public class EasyJetpackPlugin extends JavaPlugin {
                     + ChatColor.RESET + ": Reloads the plugin.");
         } else if (args[0].equalsIgnoreCase("reload")) {
             sender.sendMessage(CHAT_PREFIX + "Reloading plugin...");
+            getLogger().info("Reload triggered by " + sender.getName());
             try {
                 reloadConfig();
             } catch (Exception e) {

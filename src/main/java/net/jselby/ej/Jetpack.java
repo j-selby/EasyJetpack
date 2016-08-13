@@ -1,31 +1,35 @@
 package net.jselby.ej;
 
+import net.jselby.ej.data.ActionTypes;
+import net.jselby.ej.data.CraftingRecipe;
+import net.jselby.ej.data.JetpackTypes;
+import net.jselby.ej.utils.PlayerInteractionUtils;
+import net.jselby.ej.utils.VisualCandyUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.inventory.Recipe;
-import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Vector;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static net.jselby.ej.EasyJetpackPlugin.CHAT_PREFIX;
 
 /**
  * A Jetpack is a singleton used to represent a modified item in the world.
  */
 public class Jetpack {
-    private static Pattern colorFilter = Pattern.compile("\\$(?<color>([A-Za-z]*))\\$");
+    private static Pattern colorFilter = Pattern.compile("\\$(?<color>([A-Za-z_]*))\\$");
+
+    private final HashMap<UUID, Integer> burstTimers = new HashMap<>();
 
     private final String name;
     private final String giveName;
@@ -34,7 +38,8 @@ public class Jetpack {
 
     private final CraftingRecipe recipe;
 
-    private final JetpackTypes type;
+    private final JetpackTypes itemType;
+    private final ActionTypes actionType;
     private final int slot;
 
     private final boolean jetpackEffect;
@@ -42,6 +47,10 @@ public class Jetpack {
 
     private final Material[] fuelTypes;
 
+    /**
+     * Creates a new Jetpack based upon a configuration file.
+     * @param section The section of a configuration file to search.
+     */
     public Jetpack(ConfigurationSection section) {
         // Parse configuration
         giveName = section.getName();
@@ -65,6 +74,7 @@ public class Jetpack {
 
         material = Material.valueOf(section.getString("material").toUpperCase().replace(" ", "_"));
 
+        // Build recipe
         String rawRecipe = section.getString("recipe", "").trim();
         if (rawRecipe.length() != 0) {
             String[] recipeArgs = rawRecipe.replaceAll("  ", " ").split(" ");
@@ -76,14 +86,16 @@ public class Jetpack {
                 }
             }
 
+            // TODO: Craft multiples?
             recipe.register();
         } else {
             recipe = null;
         }
 
-        type = JetpackTypes.valueOf(section.getString("type", "armor").toUpperCase());
+        itemType = JetpackTypes.valueOf(section.getString("type", "armor").toUpperCase());
+        actionType = ActionTypes.valueOf(section.getString("actionType", "BOOST"));
 
-        if (type == JetpackTypes.ARMOR) {
+        if (itemType == JetpackTypes.ARMOR) {
             String slotName = section.getString("slot", "chestplate").toUpperCase();
             switch(slotName) {
                 case "HELMET":
@@ -106,10 +118,15 @@ public class Jetpack {
         }
 
         // Read fuel
-        String[] fuelTypesRaw = section.getString("fuel", "").trim().split(" ");
-        fuelTypes = new Material[fuelTypesRaw.length];
-        for (int i = 0; i < fuelTypesRaw.length; i++) {
-            fuelTypes[i] = Material.getMaterial(fuelTypesRaw[i].toUpperCase());
+        String fuelTypesString = section.getString("fuel", "").trim();
+        if (!fuelTypesString.isEmpty()) {
+            String[] fuelTypesRaw = fuelTypesString.split(" ");
+            fuelTypes = new Material[fuelTypesRaw.length];
+            for (int i = 0; i < fuelTypesRaw.length; i++) {
+                fuelTypes[i] = Material.getMaterial(fuelTypesRaw[i].toUpperCase());
+            }
+        } else {
+            fuelTypes = new Material[0];
         }
 
         // TODO: Implement repairability
@@ -117,14 +134,31 @@ public class Jetpack {
         jetpackEffect = section.getBoolean("useJetpackEffect", false);
     }
 
+    /**
+     * Returns the 'give' name of this Jetpack.
+     *
+     * It is sourced from the configuration section name, and is used within commands.
+     *
+     * @return A String containing this Jetpacks give name.
+     */
     public String getGiveName() {
         return giveName;
     }
 
-    public final String getName() {
+    /**
+     * Returns the name of this Jetpack. This may contain ChatColors.
+     *
+     * @return A Jetpack name.
+     */
+    public String getName() {
         return name;
     }
 
+    /**
+     * Returns a instance of this Jetpack as a item.
+     *
+     * @return A ItemStack.
+     */
     public ItemStack getItem() {
         ItemStack items = new ItemStack(material, 1);
         ItemMeta meta = items.getItemMeta();
@@ -143,18 +177,23 @@ public class Jetpack {
     public int searchInventory(Player player) {
         PlayerInventory inventory = player.getInventory();
         ItemStack me = getItem();
-        if (type == JetpackTypes.ARMOR
-                && Utils.isItemStackEqual(me,
+        if (itemType == JetpackTypes.ARMOR
+                && PlayerInteractionUtils.isItemStackEqual(me,
                     inventory.getItem(inventory.getSize() - (2 + slot)))) {
                 return inventory.getSize() - (2 + slot);
-        } else if (type == JetpackTypes.TOOL) {
+        } else if (itemType == JetpackTypes.TOOL) {
             // TODO: Tools
         }
         return -1;
     }
 
-    public void onCrouch(PlayerToggleSneakEvent event) {
-        if (event.isSneaking()) {
+    /**
+     * Internal method to handle players crouching.
+     *
+     * @param event The event to handle.
+     */
+    void onCrouch(PlayerToggleSneakEvent event) {
+        if (actionType == ActionTypes.BOOST && event.isSneaking()) {
             if (!checkFuel(event.getPlayer())) {
                 return;
             }
@@ -162,25 +201,108 @@ public class Jetpack {
             // TODO: Custom movement types, velocity
             Vector dir = event.getPlayer().getLocation().getDirection();
             event.getPlayer().setVelocity(
-                    Utils.addVector(event.getPlayer(), new Vector(
+                    PlayerInteractionUtils.addVector(event.getPlayer(), new Vector(
                             dir.getX() * 0.8D, 0.8D, dir.getZ() * 0.8D), 0.45, 0.6, 0.45));
 
             if (jetpackEffect) {
-                VisualCandy.jetpackEffect(event.getPlayer());
+                VisualCandyUtils.jetpackEffect(event.getPlayer());
+            }
+        } else if (actionType == ActionTypes.BURST && event.isSneaking()) {
+            int id = Bukkit.getScheduler().scheduleSyncRepeatingTask(JetpackManager.getInstance().getPlugin(), new Runnable() {
+                @Override
+                public void run() {
+                    if (!event.getPlayer().isOnline()
+                            || !checkFuel(event.getPlayer())) {
+                        Bukkit.getScheduler().cancelTask(burstTimers.remove(event.getPlayer().getUniqueId()));
+                        return;
+                    }
+
+                    Vector dir = event.getPlayer().getLocation().getDirection();
+                    double y = event.getPlayer().getVelocity().getY();
+                    if (y < 0.3D) {
+                        y = 0.3D;
+                    }
+                    y *= 1.3D;
+                    if (y > 10) {
+                        y = 10;
+                    }
+                    event.getPlayer().setVelocity(
+                            PlayerInteractionUtils.addVector(event.getPlayer(), new Vector(
+                                            dir.getX() * 0.5D, y, dir.getZ() * 0.5D), 0.7, 0.6,
+                                    0.7));
+
+                    VisualCandyUtils.jetpackEffect(event.getPlayer());
+                }
+            }, 1L, 1L);
+            burstTimers.put(event.getPlayer().getUniqueId(), id);
+        } else if (actionType == ActionTypes.BURST && !event.isSneaking()) {
+            if (burstTimers.containsKey(event.getPlayer().getUniqueId())) {
+                Bukkit.getScheduler().cancelTask(burstTimers.remove(event.getPlayer().getUniqueId()));
+            }
+        } else if (actionType == ActionTypes.TELEPORT && event.isSneaking()) {
+            if (!checkFuel(event.getPlayer())) {
+                return;
+            }
+
+            HashSet<Material> ignore = new HashSet<>();
+            ignore.add(Material.AIR);
+            Block block = event.getPlayer().getTargetBlock(ignore, 30);
+            if (block != null) {
+                Vector oldVelocity = event.getPlayer().getVelocity();
+                Location loc = block.getLocation().add(0.5, 1, 0.5);
+                loc.setYaw(event.getPlayer().getLocation().getYaw());
+                loc.setPitch(event.getPlayer().getLocation().getPitch());
+                event.getPlayer().teleport(loc);
+                event.getPlayer().setVelocity(oldVelocity);
             }
         }
     }
 
+    /**
+     * Internal method to handle players getting damaged.
+     *
+     * @param event The event to handle. Must be for a Player.
+     */
+    void onDamage(EntityDamageEvent event) {
+        if (event.getCause() == EntityDamageEvent.DamageCause.FALL
+                && actionType == ActionTypes.NO_FALL_DAMAGE) {
+            if (!checkFuel((Player) event.getEntity())) {
+                return;
+            }
+            event.setCancelled(true);
+        }
+    }
+
+    /**
+     * Internal event used when this Jetpack is removed from a Manager.
+     */
+    void onRemove() {
+        for (Map.Entry<UUID, Integer> id : burstTimers.entrySet()) {
+            Bukkit.getScheduler().cancelTask(id.getValue());
+            Player player = Bukkit.getPlayer(id.getKey());
+            if (player != null) {
+                player.sendMessage(EasyJetpackPlugin.CHAT_PREFIX
+                        + "Plugin has been reloaded. Reactivate burst tool to continue flying.");
+            }
+        }
+    }
+
+    /**
+     * Checks the fuel of this Jetpack.
+     *
+     * @param player The player to check.
+     * @return If fuel was successfully used.
+     */
     private boolean checkFuel(Player player) {
         // Check if fuel is enabled
         if (fuelTypes.length != 0) {
             for (Material fuelType : fuelTypes) {
                 // TODO: better params
-                if (Utils.useFuel(player, fuelType, 0, true, 1f)) {
+                if (PlayerInteractionUtils.useFuel(player, fuelType, 0, true, 1f)) {
                     return true;
                 }
             }
-            player.sendMessage(CHAT_PREFIX + ChatColor.RED + "You have no fuel!");
+            player.sendMessage(ChatColor.RED + "You have no fuel!");
             return false;
         } else {
             return true;

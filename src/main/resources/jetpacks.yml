@@ -15,13 +15,79 @@ traditional:
   slot: CHESTPLATE
   repairable: false
 
-  movementType: CROUCH
-
   fuel: COAL CHARCOAL
   fuelUseSpeed: 0.25 # per item
 
   actionType: BOOST
+  movementType: CROUCH
   velocity: 0.45 0.6 0.45
 
   useJetpackEffect: true
 
+burst:
+  itemName: $blue$Burst Jetpack
+  description: |
+    Need to climb into the atmosphere
+    at great speeds? The burst jetpack
+    is for you!
+
+  material: GOLD_CHESTPLATE
+  recipe: >
+    REDSTONE DIAMOND REDSTONE
+    REDSTONE GOLD_LEGGINGS REDSTONE
+    REDSTONE FURNACE REDSTONE
+
+  type: ARMOR
+  slot: CHESTPLATE
+  repairable: false
+
+  fuel: COAL CHARCOAL
+  fuelUseSpeed: 0.25 # per item
+
+  actionType: BURST
+  movementType: CROUCH
+  velocity: 0.45 0.6 0.45
+
+  useJetpackEffect: true
+
+teleport:
+  itemName: $gold$Teleportation Jetpack
+  description: |
+    Like a ender pearl, but
+    more expensive and time
+    consuming to obtain.
+
+  material: CHAINMAIL_CHESTPLATE
+  recipe: >
+    ENDER_PEARL DIAMOND ENDER_PEARL
+    ENDER_PEARL GOLD_LEGGINGS ENDER_PEARL
+    ENDER_PEARL FURNACE ENDER_PEARL
+
+  type: ARMOR
+  slot: CHESTPLATE
+  repairable: false
+
+  fuel: COAL CHARCOAL
+  fuelUseSpeed: 0.25 # per item
+
+  actionType: TELEPORT
+
+  useJetpackEffect: false
+
+fallboots:
+  itemName: $dark_red$Fall Boots
+  description: |
+    Direct from Aperture Science!
+    Outlawed in 170 countries!
+
+  material: LEATHER_BOOTS
+  recipe: >
+    empty empty empty
+    FEATHER LEATHER_BOOTS FEATHER
+    empty empty empty
+
+  type: ARMOR
+  slot: BOOTS
+  repairable: false
+
+  actionType: NO_FALL_DAMAGE

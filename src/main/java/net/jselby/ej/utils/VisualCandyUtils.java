@@ -1,12 +1,15 @@
-package net.jselby.ej;
+package net.jselby.ej.utils;
 
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
-import java.util.Collection;
+/**
+ * Visual Candy relates to sound and visual effects for Jetpacks.
+ */
+public class VisualCandyUtils {
+    private VisualCandyUtils() {}
 
-public class VisualCandy {
     /**
      * Creates a 'Jetpack' effect at the player's location
      *
@@ -26,9 +29,6 @@ public class VisualCandy {
      * @param num How many effects should be emitted
      */
     public static void playEffect(Effect e, Location l, int num) {
-        Collection<? extends Player> players = JetpackManager.getInstance().getPlugin().getServer().getOnlinePlayers();
-        for (Player player : players) {
-            player.playEffect(l, e, num);
-        }
+        l.getWorld().playEffect(l, e, num);
     }
 }

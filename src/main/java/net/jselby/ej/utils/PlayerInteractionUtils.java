@@ -1,4 +1,4 @@
-package net.jselby.ej;
+package net.jselby.ej.utils;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -13,10 +13,10 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Several utilities to help with jetpacks.
+ * Several utilities to help with Jetpacks and players.
  */
-public class Utils {
-    private Utils() {}
+public class PlayerInteractionUtils {
+    private PlayerInteractionUtils() {}
 
     /**
      * Moves a player around.
@@ -245,7 +245,7 @@ public class Utils {
             }
 
             // Shuffle their inventory.
-            Utils.shuffleCoal(player, fuel, durability, mustBeHolding, isOffhand);
+            shuffleCoal(player, fuel, durability, mustBeHolding, isOffhand);
         } else {
             // Do we need to spawn the burningFuel in their inventory?
             if (spawnBurningFuel) {

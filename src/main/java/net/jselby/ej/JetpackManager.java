@@ -1,10 +1,12 @@
 package net.jselby.ej;
 
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -36,46 +38,77 @@ public class JetpackManager implements Listener {
     }
 
     /**
-     * Adds a jetpack to this manager.
+     * Adds a Jetpack to this manager.
      *
-     * @param jetpack The jetpack to add.
+     * @param jetpack The Jetpack to add.
      */
     public void addJetpack(Jetpack jetpack) {
         jetpacks.put(jetpack.getGiveName().toLowerCase(), jetpack);
     }
 
     /**
-     * Removes all active jetpacks from this manager.
+     * Removes all active Jetpacks from this manager.
      */
     public void removeAllJetpacks() {
+        for (Jetpack jetpack : jetpacks.values()) {
+            jetpack.onRemove();
+        }
         jetpacks.clear();
     }
 
     /**
-     * Searches for a jetpack by name.
+     * Searches for a Jetpack by its config name.
+     * @param name The Jetpack name.
+     * @return A Jetpack, or null if it wasn't found.
      */
     public Jetpack getJetpack(String name) {
         return jetpacks.get(name.toLowerCase());
     }
 
+    /**
+     * Returns the Jetpacks that the player currently has equipped.
+     * @param player The player to search.
+     * @return An array of Jetpacks. Empty if none found.
+     */
+    private Jetpack[] getEquippedJetpacks(Player player) {
+        ArrayList<Jetpack> foundJetpacks = new ArrayList<>();
+        for (Jetpack jetpack : jetpacks.values()) {
+            int slot = jetpack.searchInventory(player);
+            if (slot != -1) {
+                foundJetpacks.add(jetpack);
+            }
+        }
+        return foundJetpacks.toArray(new Jetpack[foundJetpacks.size()]);
+    }
+
+    /**
+     * Handles players crouching.
+     * @param evt The Bukkit event to handle.
+     */
     @EventHandler
     public void onCrouch(PlayerToggleSneakEvent evt) {
-        Jetpack foundJetpack;
-        if ((foundJetpack = isJetpackEquipped(evt)) != null) {
+        for (Jetpack foundJetpack : getEquippedJetpacks(evt.getPlayer())) {
             foundJetpack.onCrouch(evt);
         }
     }
 
-    private Jetpack isJetpackEquipped(PlayerEvent event) {
-        for (Jetpack jetpack : jetpacks.values()) {
-            int slot = jetpack.searchInventory(event.getPlayer());
-            if (slot != -1) {
-                return jetpack;
+    /**
+     * Handles players taking damage.
+     * @param evt The Bukkit event to handle.
+     */
+    @EventHandler
+    public void onDamage(EntityDamageEvent evt) {
+        if (evt.getEntity() instanceof Player) {
+            for (Jetpack foundJetpack : getEquippedJetpacks((Player) evt.getEntity())) {
+                foundJetpack.onDamage(evt);
             }
         }
-        return null;
     }
 
+    /**
+     * Returns the host plugin of this manager.
+     * @return A EasyJetpackPlugin instance.
+     */
     public EasyJetpackPlugin getPlugin() {
         return plugin;
     }
