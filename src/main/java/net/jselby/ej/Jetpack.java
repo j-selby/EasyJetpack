@@ -56,7 +56,11 @@ public class Jetpack {
         giveName = section.getName();
 
         // Name has special $COLOR$ params
-        String rawName = ChatColor.RESET + section.getString("itemName", "Unnamed Jetpack");
+        if (!section.contains("itemName")) {
+            throw new IllegalArgumentException("No in-game item name specified for item " + giveName);
+        }
+
+        String rawName = ChatColor.RESET + section.getString("itemName");
         Matcher nameMatcher;
         while((nameMatcher = colorFilter.matcher(rawName)).find()) {
             rawName = nameMatcher.replaceFirst(ChatColor.valueOf(nameMatcher.group("color").toUpperCase()).toString());
@@ -68,9 +72,13 @@ public class Jetpack {
         while((nameMatcher = colorFilter.matcher(rawDescription)).find()) {
             rawDescription = nameMatcher.replaceFirst(ChatColor.valueOf(nameMatcher.group("color").toUpperCase()).toString());
         }
-        description = new ArrayList<>();
-        Collections.addAll(description, rawDescription.split("\n"));
-        description.replaceAll(s -> ChatColor.RESET + s);
+        if (!rawDescription.isEmpty()) {
+            description = new ArrayList<>();
+            Collections.addAll(description, rawDescription.split("\n"));
+            description.replaceAll(s -> ChatColor.RESET + s);
+        } else {
+            description = null;
+        }
 
         material = Material.valueOf(section.getString("material").toUpperCase().replace(" ", "_"));
 
@@ -168,7 +176,9 @@ public class Jetpack {
         ItemStack items = new ItemStack(material, 1);
         ItemMeta meta = items.getItemMeta();
         meta.setDisplayName(name);
-        meta.setLore(description);
+        if (description != null) {
+            meta.setLore(description);
+        }
         items.setItemMeta(meta);
         return items;
     }
