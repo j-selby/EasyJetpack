@@ -5,6 +5,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,7 +13,7 @@ import java.util.HashMap;
 /**
  * The JetpackManager allows for the adding and handling of Jetpacks.
  */
-public class JetpackManager implements Listener {
+public class JetpackManager {
     private static JetpackManager instance;
     private final EasyJetpackPlugin plugin;
 
@@ -26,7 +27,7 @@ public class JetpackManager implements Listener {
     JetpackManager(EasyJetpackPlugin plugin) {
         instance = this;
         this.plugin = plugin;
-        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        plugin.getServer().getPluginManager().registerEvents(new JetpackListener(this), plugin);
     }
 
     /**
@@ -70,7 +71,7 @@ public class JetpackManager implements Listener {
      * @param player The player to search.
      * @return An array of Jetpacks. Empty if none found.
      */
-    private Jetpack[] getEquippedJetpacks(Player player) {
+    public Jetpack[] getEquippedJetpacks(Player player) {
         ArrayList<Jetpack> foundJetpacks = new ArrayList<>();
         for (Jetpack jetpack : jetpacks.values()) {
             int slot = jetpack.searchInventory(player);
@@ -79,30 +80,6 @@ public class JetpackManager implements Listener {
             }
         }
         return foundJetpacks.toArray(new Jetpack[foundJetpacks.size()]);
-    }
-
-    /**
-     * Handles players crouching.
-     * @param evt The Bukkit event to handle.
-     */
-    @EventHandler
-    public void onCrouch(PlayerToggleSneakEvent evt) {
-        for (Jetpack foundJetpack : getEquippedJetpacks(evt.getPlayer())) {
-            foundJetpack.onCrouch(evt);
-        }
-    }
-
-    /**
-     * Handles players taking damage.
-     * @param evt The Bukkit event to handle.
-     */
-    @EventHandler
-    public void onDamage(EntityDamageEvent evt) {
-        if (evt.getEntity() instanceof Player) {
-            for (Jetpack foundJetpack : getEquippedJetpacks((Player) evt.getEntity())) {
-                foundJetpack.onDamage(evt);
-            }
-        }
     }
 
     /**
@@ -125,5 +102,14 @@ public class JetpackManager implements Listener {
             throw new IllegalStateException("EasyJetpack has not been initialized yet!");
         }
         return instance;
+    }
+
+    public Jetpack getJetpackFromItem(ItemStack item) {
+        for (Jetpack jetpack : jetpacks.values()) {
+            if (jetpack.isItemThisJetpack(item)) {
+                return jetpack;
+            }
+        }
+        return null;
     }
 }

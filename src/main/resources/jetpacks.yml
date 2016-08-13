@@ -21,7 +21,6 @@ traditional:
   fuelUseSpeed: 0.25 # per item
 
   actionType: BOOST
-  movementType: CROUCH
   velocity: 0.45 0.6 0.45
 
   useJetpackEffect: true
@@ -47,7 +46,6 @@ burst:
   fuelUseSpeed: 0.25 # per item
 
   actionType: BURST
-  movementType: CROUCH
   velocity: 0.45 0.6 0.45
 
   useJetpackEffect: true

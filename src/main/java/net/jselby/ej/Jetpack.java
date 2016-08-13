@@ -13,6 +13,7 @@ import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -129,7 +130,6 @@ public class Jetpack {
             fuelTypes = new Material[0];
         }
 
-        // TODO: Implement repairability
         repairable = section.getBoolean("repairable", false);
         jetpackEffect = section.getBoolean("useJetpackEffect", false);
     }
@@ -176,15 +176,24 @@ public class Jetpack {
      */
     public int searchInventory(Player player) {
         PlayerInventory inventory = player.getInventory();
-        ItemStack me = getItem();
         if (itemType == JetpackTypes.ARMOR
-                && PlayerInteractionUtils.isItemStackEqual(me,
+                && isItemThisJetpack(
                     inventory.getItem(inventory.getSize() - (2 + slot)))) {
                 return inventory.getSize() - (2 + slot);
         } else if (itemType == JetpackTypes.TOOL) {
             // TODO: Tools
         }
         return -1;
+    }
+
+    /**
+     * Checks if a specified item is this Jetpack.
+     *
+     * @param stack The item to check.
+     * @return If this item is this Jetpack.
+     */
+    public boolean isItemThisJetpack(ItemStack stack) {
+        return PlayerInteractionUtils.isItemStackEqual(getItem(), stack);
     }
 
     /**
@@ -198,7 +207,7 @@ public class Jetpack {
                 return;
             }
 
-            // TODO: Custom movement types, velocity
+            // TODO: Custom velocity
             Vector dir = event.getPlayer().getLocation().getDirection();
             event.getPlayer().setVelocity(
                     PlayerInteractionUtils.addVector(event.getPlayer(), new Vector(
@@ -269,6 +278,17 @@ public class Jetpack {
             if (!checkFuel((Player) event.getEntity())) {
                 return;
             }
+            event.setCancelled(true);
+        }
+    }
+
+    /**
+     * Internal method to handle players using anvils to repair jetpacks.
+     *
+     * @param event The event to check.
+     */
+    void onPlayerRenameItem(InventoryClickEvent event) {
+        if (!repairable) {
             event.setCancelled(true);
         }
     }
