@@ -12,12 +12,18 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.util.Set;
 
+/**
+ * The main entry point for the Bukkit plugin. Handles hooks and config reading.
+ */
 public class EasyJetpackPlugin extends JavaPlugin {
-    public final static String CHAT_PREFIX = ChatColor.WHITE + "["
+    final static String CHAT_PREFIX = ChatColor.WHITE + "["
             + ChatColor.BLUE + "EasyJetpack" + ChatColor.WHITE + "] ";
 
     private JetpackManager manager;
 
+    /**
+     * Called when the plugin is first started.
+     */
     public void onEnable() {
         // Give warning about allowing flight
         if (!Bukkit.getAllowFlight()) {
@@ -57,6 +63,9 @@ public class EasyJetpackPlugin extends JavaPlugin {
                         + ") has been successfully enabled!");
     }
 
+    /**
+     * Reloads the plugin's configuration, and resets all Jetpacks.
+     */
     @Override
     public void reloadConfig() {
         // Parse our jetpack configuration
@@ -75,6 +84,15 @@ public class EasyJetpackPlugin extends JavaPlugin {
         }
     }
 
+    /**
+     * Handles a command sent by the console or a Player.
+     *
+     * @param sender The source of the command.
+     * @param command The command itself.
+     * @param label The command name.
+     * @param args Command arguments.
+     * @return If the command was successful. (Always true).
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0 || args[0].equalsIgnoreCase("help")) {
@@ -93,6 +111,7 @@ public class EasyJetpackPlugin extends JavaPlugin {
             sender.sendMessage(CHAT_PREFIX + ChatColor.ITALIC + "/ej reload"
                     + ChatColor.RESET + ": Reloads the plugin.");
         } else if (args[0].equalsIgnoreCase("reload")) {
+            // Reloads the plugin's configuration
             sender.sendMessage(CHAT_PREFIX + "Reloading plugin...");
             getLogger().info("Reload triggered by " + sender.getName());
             try {
@@ -105,6 +124,7 @@ public class EasyJetpackPlugin extends JavaPlugin {
             }
             sender.sendMessage(CHAT_PREFIX + ChatColor.GREEN + "Reload successful.");
         } else if (args[0].equalsIgnoreCase("list")) {
+            // List jetpacks
             sender.sendMessage(CHAT_PREFIX + "Jetpacks:");
             for (Jetpack jetpack : manager.getJetpacks()) {
                 sender.sendMessage(CHAT_PREFIX + " - (" + jetpack.getGiveName() + ") " + jetpack.getName());
@@ -123,8 +143,8 @@ public class EasyJetpackPlugin extends JavaPlugin {
                     sender.sendMessage(CHAT_PREFIX + ChatColor.RED + "Jetpack not found.");
                 }
             } else if (args.length == 2) {
+                // Self give
                 if (sender instanceof Player) {
-                    // Self give
                     Jetpack jetpack = manager.getJetpack(args[1]);
                     if (jetpack != null) {
                         ((Player) sender).getInventory().addItem(jetpack.getItem());
