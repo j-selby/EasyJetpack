@@ -1,8 +1,16 @@
 name: EasyJetpack
-main: net.jselby.ej.EasyJetpack
-version: 1.3
-author: j_selby
-softdepend: [AntiCheat]
+version: 2.0.0
+description: Jetpacks and More!
+authors: [jselby]
+website: https://github.com/j-selby/EasyJetpack
+
+main: net.jselby.ej.EasyJetpackPlugin
+
+commands:
+   ej:
+      description: Various EasyJetpack admin commmands
+      usage: /ej
+
 permissions:
    easyjetpack.jetpackname:
       description: Allows a player to use a jetpack
@@ -13,8 +21,3 @@ permissions:
    easyjetpack.nofall:
       description: Disables all fall damage, while wearing a jetpack
       default: op
-commands:
-   ej:
-      description: Various EasyJetpack admin commmands
-      usage: /ej
-      

@@ -1,6 +1,5 @@
 package net.jselby.ej;
 
-import net.jselby.ej.api.Jetpack.Slot;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -10,27 +9,45 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 /**
- * A convenience class, containing simple methods for manipulation
- *
- * @author James
+ * Several utilities to help with jetpacks.
  */
 public class Utils {
+    private Utils() {}
 
     /**
-     * A method to convert a String array to a List of Strings
+     * Moves a player around.
      *
-     * @param array The string array to convert
-     * @return A ArrayList containing the array elements
+     * @param p    The player to adjust
+     * @param v    The vector to add
+     * @param maxX Maximum speed on the X axis
+     * @param maxY Maximum speed on the Y axis
+     * @param maxZ Maximum speed on the Z axis
+     * @return The new vector.
      */
-    public static List<String> convertToList(String[] array) {
-        ArrayList<String> list = new ArrayList<String>();
-        Collections.addAll(list, array);
-        return list;
+    public static Vector addVector(Player p, Vector v, double maxX, double maxY, double maxZ) {
+        Vector curr = p.getVelocity();
+        Vector added = curr.add(v);
+        if (added.getX() > maxX) {
+            added.setX(maxX);
+        }
+        if (added.getX() < -maxX) {
+            added.setX(-maxX);
+        }
+        if (added.getY() > maxY) {
+            added.setY(maxY);
+        }
+        if (added.getZ() > maxZ) {
+            added.setZ(maxZ);
+        }
+        if (added.getZ() < -maxZ) {
+            added.setZ(-maxZ);
+        }
+        added = added.normalize();
+        return added;
     }
 
     /**
@@ -92,18 +109,13 @@ public class Utils {
      * @param factor        The factor to kill the coal by
      * @return If the operation was a success
      */
-    public static boolean useFuel(Player player, boolean mustBeHolding,
+    public static boolean useFuel(Player player, Material fuel, int durability,
+                                  boolean mustBeHolding,
                                   double factor) {
-        Material fuel = Material.getMaterial(EasyJetpack.getInstance()
-                .getConfig()
-                .getString("fuel.material", "COAL"));
-        int durability = EasyJetpack.getInstance()
-                .getConfig()
-                .getInt("fuel.durability", -1);
-
         PlayerInventory inventory = player.getInventory();
 
         boolean isBurning = false;
+        boolean isOffhand = false;
         ItemStack foundFuel = null;
         int fuelSlot = -1;
 
@@ -111,7 +123,7 @@ public class Utils {
         if (mustBeHolding) {
             // They need to be holding the fuel for it to burn;
             // check if they are holding it.
-            foundFuel = inventory.getItemInHand();
+            foundFuel = inventory.getItemInMainHand();
             if (foundFuel != null && foundFuel.getType() == fuel
                     && (durability == -1 || foundFuel.getDurability() == durability)) {
                 // This is a sample of fuel, so we can now toy with it.
@@ -121,7 +133,19 @@ public class Utils {
                 fuelSlot = inventory.getHeldItemSlot();
             } else {
                 // What just happened here? This isn't fuel!
-                return false;
+                foundFuel = inventory.getItemInOffHand();
+                if (foundFuel != null && foundFuel.getType() == fuel
+                        && (durability == -1 || foundFuel.getDurability() == durability)) {
+                    // This is a sample of fuel, so we can now toy with it.
+                    // Check its metadata for the "% left" name
+                    isBurning = (foundFuel.hasItemMeta() && foundFuel.getItemMeta().hasLore() &&
+                            foundFuel.getItemMeta().getLore().get(0).contains("% left"));
+                    fuelSlot = inventory.getHeldItemSlot();
+                    isOffhand = true;
+                } else {
+                    // What just happened here? This isn't fuel!
+                    return false;
+                }
             }
         } else {
             // Check for burning fuel everywhere.
@@ -166,7 +190,7 @@ public class Utils {
         ItemStack burningFuel;
         // Do we need to spawn this burningFuel when we are done with it? (If it already
         // exists, no)
-        boolean spawnBurningFuel = false;
+        boolean spawnBurningFuel = true;
 
         if (!isBurning) {
             // Burning + Non-burning fuel doesn't stack. Store it for later.
@@ -210,16 +234,28 @@ public class Utils {
         // If the fuel usage is less then 1, this fuel is extinguished.
         if (fuelUsage < 1) {
             // Delete it.
-            inventory.setItem(fuelSlot, new ItemStack(Material.AIR, 1));
+            if (mustBeHolding) {
+                if (isOffhand) {
+                    inventory.setItemInOffHand(new ItemStack(Material.AIR, 1));
+                } else {
+                    inventory.setItemInMainHand(new ItemStack(Material.AIR, 1));
+                }
+            } else {
+                inventory.setItem(fuelSlot, new ItemStack(Material.AIR, 1));
+            }
 
             // Shuffle their inventory.
-            Utils.shuffleCoal(player, mustBeHolding);
+            Utils.shuffleCoal(player, fuel, durability, mustBeHolding, isOffhand);
         } else {
             // Do we need to spawn the burningFuel in their inventory?
             if (spawnBurningFuel) {
                 // Spawn it in the respective place.
                 if (mustBeHolding) {
-                    inventory.setItemInHand(burningFuel);
+                    if (isOffhand) {
+                        inventory.setItemInOffHand(burningFuel);
+                    } else {
+                        inventory.setItemInMainHand(burningFuel);
+                    }
                 } else {
                     inventory.setItem(fuelSlot, burningFuel);
                 }
@@ -241,13 +277,8 @@ public class Utils {
      * @param player        The player to obtain the item from
      * @param mustBeHolding Should the coal end up in the players hand?
      */
-    public static void shuffleCoal(Player player, boolean mustBeHolding) {
-        Material fuelMaterial = Material.getMaterial(EasyJetpack.getInstance().getConfig()
-                .getString("fuel.material", "COAL"));
-        int durability = EasyJetpack.getInstance()
-                .getConfig()
-                .getInt("fuel.durability", -1);
-
+    public static void shuffleCoal(Player player, Material fuelMaterial,
+                                   int durability, boolean mustBeHolding, boolean isOffhand) {
         // First, make sure they are holding fuel.
         if (player.getInventory().contains(fuelMaterial)) {
             int position = -1;
@@ -264,7 +295,11 @@ public class Utils {
                 player.getInventory().removeItem(stack);
 
                 if (mustBeHolding) {
-                    player.setItemInHand(stack);
+                    if (isOffhand) {
+                        player.getInventory().setItemInOffHand(stack);
+                    } else {
+                        player.getInventory().setItemInMainHand(stack);
+                    }
                 } else {
                     player.getInventory().addItem(stack);
                 }
@@ -276,136 +311,5 @@ public class Utils {
         player.sendMessage(ChatColor.RED
                 + "You have run out of "
                 + fuelMaterial.name().toLowerCase() + "!");
-    }
-
-    /**
-     * Obtains the item that the player has in the relevant slot. Supports the
-     * slots from Jetpack.Slot.
-     *
-     * @param player The player to obtain the item from
-     * @param slot   The slot that should be checked
-     * @return A ItemStack, or null
-     */
-    public static ItemStack getSlot(Player player, Slot slot) {
-        switch (slot) {
-            case HELD_ITEM:
-                return player.getItemInHand();
-            case HELMET:
-                return player.getInventory().getHelmet();
-            case CHESTPLATE:
-                return player.getInventory().getChestplate();
-            case LEGGINGS:
-                return player.getInventory().getLeggings();
-            case BOOTS:
-                return player.getInventory().getBoots();
-            default:
-                return null;
-        }
-    }
-
-    /**
-     * Sets the specified slot to the new item, using slots from Jetpack.Slot.
-     *
-     * @param player The player who will be modified
-     * @param slot   The slot that will be modified
-     */
-    public static void setSlot(Player player, Slot slot, ItemStack is) {
-        switch (slot) {
-            case HELD_ITEM:
-                player.setItemInHand(is);
-                break;
-            case HELMET:
-                player.getInventory().setHelmet(is);
-                break;
-            case CHESTPLATE:
-                player.getInventory().setChestplate(is);
-                break;
-            case LEGGINGS:
-                player.getInventory().setLeggings(is);
-                break;
-            case BOOTS:
-                player.getInventory().setBoots(is);
-                break;
-            default:
-                break;
-        }
-    }
-
-    /**
-     * Damages the item within the specified slot.
-     *
-     * @param player  The player who will be modified
-     * @param slot    The slot that will be modified
-     * @param maximum The maximum amount of damage the item can withstain.
-     *                It will be deleted if it reaches this.
-     */
-    public static void damage(Player player, Slot slot, int maximum) {
-        ItemStack jetpack = Utils.getSlot(player, slot);
-        jetpack.setDurability((short) (jetpack.getDurability() + 1));
-
-        if (jetpack.getDurability() > maximum) {
-            player.sendMessage(ChatColor.RED + "Your "
-                    + jetpack.getItemMeta().getDisplayName() + ChatColor.RESET
-                    + "" + ChatColor.RED + " is broken!");
-            Utils.setSlot(player, slot, new ItemStack(Material.AIR, 1));
-        } else {
-            Utils.setSlot(player, slot, jetpack);
-        }
-    }
-
-    /**
-     * Moves a player around.
-     *
-     * @param p    The player to adjust
-     * @param v    The vector to add
-     * @param maxX Maximum speed on the X axis
-     * @param maxY Maximum speed on the Y axis
-     * @param maxZ Maximum speed on the Z axis
-     * @return The new vector.
-     */
-    public static Vector addVector(Player p, Vector v, double maxX, double maxY, double maxZ) {
-        Vector curr = p.getVelocity();
-        Vector added = curr.add(v);
-        if (added.getX() > maxX) {
-            added.setX(maxX);
-        }
-        if (added.getX() < -maxX) {
-            added.setX(-maxX);
-        }
-        if (added.getY() > maxY) {
-            added.setY(maxY);
-        }
-        if (added.getZ() > maxZ) {
-            added.setZ(maxZ);
-        }
-        if (added.getZ() < -maxZ) {
-            added.setZ(-maxZ);
-        }
-        added = added.normalize();
-        return added;
-    }
-
-    /**
-     * Checks if a player currently has fuel in their inventory. This respects
-     * durability, if it was set.
-     *
-     * @param player The player to search
-     * @return If fuel was found.
-     */
-    public static boolean playerHasFuel(Player player) {
-        Material fuelMaterial = Material.getMaterial(EasyJetpack.getInstance().getConfig()
-                .getString("fuel.material", "COAL"));
-        int durability = EasyJetpack.getInstance()
-                .getConfig()
-                .getInt("fuel.durability", -1);
-
-        for (int i = 0; i < player.getInventory().getSize(); i++) {
-            ItemStack test = player.getInventory().getItem(i);
-            if (test != null && test.getType() == fuelMaterial &&
-                    (durability == -1 ||  test.getDurability() == durability)) {
-                return true;
-            }
-        }
-        return false;
     }
 }

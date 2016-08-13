@@ -1,0 +1,27 @@
+traditional:
+  itemName: $blue$Jetpack
+  description: |
+    Fly away in the Jetpack 3000!
+    Limited time only! Only $9.95
+    at your local black market.
+
+  material: GOLD_CHESTPLATE
+  recipe: >
+    empty DIAMOND empty
+    empty GOLD_CHESTPLATE empty
+    empty FURNACE empty
+
+  type: ARMOR
+  slot: CHESTPLATE
+  repairable: false
+
+  movementType: CROUCH
+
+  fuel: COAL CHARCOAL
+  fuelUseSpeed: 0.25 # per item
+
+  actionType: BOOST
+  velocity: 0.45 0.6 0.45
+
+  useJetpackEffect: true
+

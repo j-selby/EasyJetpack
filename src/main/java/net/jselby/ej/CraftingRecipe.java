@@ -1,4 +1,4 @@
-package net.jselby.ej.impl;
+package net.jselby.ej;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;

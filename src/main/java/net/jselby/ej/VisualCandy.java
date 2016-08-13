@@ -4,6 +4,8 @@ import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
+import java.util.Collection;
+
 public class VisualCandy {
     /**
      * Creates a 'Jetpack' effect at the player's location
@@ -23,11 +25,10 @@ public class VisualCandy {
      * @param l   The location of the effect
      * @param num How many effects should be emitted
      */
-    @SuppressWarnings("deprecation")
     public static void playEffect(Effect e, Location l, int num) {
-        for (int i = 0; i < EasyJetpack.getInstance().getServer()
-                .getOnlinePlayers().length; i++)
-            EasyJetpack.getInstance().getServer().getOnlinePlayers()[i]
-                    .playEffect(l, e, num);
+        Collection<? extends Player> players = JetpackManager.getInstance().getPlugin().getServer().getOnlinePlayers();
+        for (Player player : players) {
+            player.playEffect(l, e, num);
+        }
     }
 }
