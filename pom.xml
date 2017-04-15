@@ -55,8 +55,8 @@
             <url>http://repo.mcstats.org/content/repositories/public</url>
         </repository>
         <repository>
-            <id>bukkit-repo</id>
-            <url>http://repo.bukkit.org/content/groups/public/</url>
+            <id>spigot-repo</id>
+            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
         <repository>
             <id>gravity-repo</id>
@@ -68,7 +68,7 @@
         <dependency>
             <groupId>org.bukkit</groupId>
             <artifactId>bukkit</artifactId>
-            <version>1.7.9-R0.2-SNAPSHOT</version>
+            <version>>1.11.2-R0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.mcstats.bukkit</groupId>
