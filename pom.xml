@@ -51,10 +51,6 @@
 
     <repositories>
         <repository>
-            <id>Plugin Metrics</id>
-            <url>http://repo.mcstats.org/content/repositories/public</url>
-        </repository>
-        <repository>
             <id>spigot-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
@@ -69,12 +65,6 @@
             <groupId>org.bukkit</groupId>
             <artifactId>bukkit</artifactId>
             <version>1.11.2-R0.1-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mcstats.bukkit</groupId>
-            <artifactId>metrics</artifactId>
-            <version>R6</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>net.gravitydevelopment.anticheat</groupId>
